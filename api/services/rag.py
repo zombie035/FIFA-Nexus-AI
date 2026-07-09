@@ -61,6 +61,42 @@ seed_documents = [
         "title": "Concessions Food Locations and Hours",
         "content": "FIFA Grill stands are located at Section 112 (East) and Section 115 (West). Burger Combos cost $12 and beverages cost $5. Concessions open 2 hours before kickoff and close 15 minutes after final whistle.",
         "category": "FAQ"
+    },
+    {
+        "id": "doc_medical_1",
+        "title": "Medical Triage and Heat Stroke Protocol",
+        "content": "During hot weather events above 32C, stadium medical teams pre-deploy water distribution volunteers to all sectors. Heat stroke patients must be moved to cooling stations at Gates 2 and 5. Ambulances staged at East and West emergency access roads. Response SLA: under 4 minutes to any location.",
+        "category": "MEDICAL"
+    },
+    {
+        "id": "doc_medical_2",
+        "title": "First Aid Station Locations",
+        "content": "First Aid Stations: Gate 1 Level 1, Gate 4 Level 1, Section 120 Level 2, and Main Medical Hub in East Concourse. Defibrillators (AED) mounted every 50 meters along all main corridors. All volunteers are trained in AED operation.",
+        "category": "MEDICAL"
+    },
+    {
+        "id": "doc_match_1",
+        "title": "Match Day Schedule and Gate Opening Times",
+        "content": "Stadium gates open 3 hours before kickoff. Fan zones activate 2.5 hours prior. Pre-match ceremony begins 45 minutes before kickoff. Media entry via Gate 7 Press Sector. Post-match fan dispersal activates immediately after final whistle with exit sequencing by section number.",
+        "category": "FAQ"
+    },
+    {
+        "id": "doc_crowd_1",
+        "title": "Crowd Density Management Protocols",
+        "content": "Stadium capacity is 82500. Optimal flow per gate is 1200 fans per hour. When any gate queue exceeds 800 fans, dynamic signage redirects to alternate gates. Sector density alerts trigger at 85% occupancy. Full lockdown protocol at 98% capacity. HVAC systems auto-adjust airflow based on section density sensors.",
+        "category": "SECURITY"
+    },
+    {
+        "id": "doc_lost_1",
+        "title": "Lost and Found Procedures",
+        "content": "Lost and Found is at Gate 1 Main Entrance Lobby and Section 108 Customer Service. Items held for 72 hours then transferred to FIFA Lost Property Office. Children separated from guardians escorted to Family Meeting Point at Gate 3 Plaza. Announcements made via PA system in 5 languages.",
+        "category": "FAQ"
+    },
+    {
+        "id": "doc_sus_2",
+        "title": "Sustainability KPIs and Energy Targets",
+        "content": "FIFA Nexus AI stadium targets 40% reduction in energy consumption vs baseline, 90% waste diversion from landfill, 100% renewable energy sourcing for LED lighting. Solar panels on roof generate 2.4 MW peak power. HVAC zones automatically power down in unoccupied sectors. Real-time energy monitoring available on Organizer dashboard.",
+        "category": "SUSTAINABILITY"
     }
 ]
 
