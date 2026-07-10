@@ -1,27 +1,48 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-geist-sans" });
-
 export const metadata: Metadata = {
-  title: "FIFA Nexus AI | Intelligent Stadium OS",
-  description: "The official GenAI Operating System for the FIFA World Cup 2026.",
+  title: "FIFA Nexus AI | Intelligent Stadium Operating System",
+  description:
+    "The world's most advanced generative AI platform for FIFA World Cup 2026 stadium operations, predictive crowd intelligence, and unparalleled fan experiences.",
+  keywords: ["FIFA", "World Cup 2026", "AI", "stadium", "operations", "generative AI"],
+  openGraph: {
+    title: "FIFA Nexus AI | Intelligent Stadium OS",
+    description: "Generative AI operating system for FIFA World Cup 2026",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} antialiased min-h-screen flex flex-col`}>
-        {/* Abstract background blobs for modern look */}
-        <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#0a0a0a]">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-yellow-900/20 blur-[120px]" />
+      <head>
+        <meta name="theme-color" content="#0a0a0b" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className="antialiased min-h-screen flex flex-col ambient-grid scanline">
+        {/* Deep ambient light orbs — fixed, behind everything */}
+        <div className="fixed inset-0 z-[-2] bg-[hsl(0,0%,2%)] overflow-hidden pointer-events-none">
+          {/* Top-left cyan bloom */}
+          <div
+            className="orb orb-cyan absolute"
+            style={{ width: "55vw", height: "55vh", top: "-15vh", left: "-15vw", opacity: 0.7 }}
+          />
+          {/* Bottom-right gold bloom */}
+          <div
+            className="orb orb-gold absolute"
+            style={{ width: "50vw", height: "50vh", bottom: "-20vh", right: "-15vw", opacity: 0.6 }}
+          />
+          {/* Center subtle blue */}
+          <div
+            className="orb orb-blue absolute"
+            style={{ width: "40vw", height: "40vh", top: "30vh", left: "30vw", opacity: 0.3 }}
+          />
         </div>
+
         {children}
       </body>
     </html>

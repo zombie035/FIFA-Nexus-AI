@@ -1,271 +1,154 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Link from "next/link";
-import { Activity, Map as MapIcon, ShieldAlert, Users, Calendar, ArrowRight, Play, MapPin, Zap, HeartPulse, Bus } from "lucide-react";
+import {
+  Activity, Map as MapIcon, ShieldAlert, Users, ArrowRight,
+  MapPin, Zap, HeartPulse, Bus, ChevronDown, Wifi,
+  Globe, Eye, Cpu,
+} from "lucide-react";
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-// Dynamically import Scene to avoid SSR issues with Three.js
 const Scene = dynamic(() => import("@/components/Scene"), { ssr: false });
 
-export default function Home() {
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+// ─── Countdown Timer ────────────────────────────────────────────────────────
+function useCountdown(target: Date) {
+  const [time, setTime] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  useEffect(() => {
+    const tick = () => {
+      const diff = target.getTime() - Date.now();
+      if (diff < 0) return;
+      setTime({
+        d: Math.floor(diff / 86_400_000),
+        h: Math.floor((diff % 86_400_000) / 3_600_000),
+        m: Math.floor((diff % 3_600_000) / 60_000),
+        s: Math.floor((diff % 60_000) / 1_000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  return time;
+}
 
-  // Animated Countdown Timer
-  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+// ─── Animated Counter ───────────────────────────────────────────────────────
+function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const [display, setDisplay] = useState(0);
+  const targetRef = useRef<HTMLDivElement>(null);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    // Target date: June 11, 2026 (FIFA World Cup 2026 Start)
-    const targetDate = new Date("2026-06-11T00:00:00Z").getTime();
-
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance < 0) {
-        clearInterval(interval);
-        return;
-      }
-
-      setTimeLeft({
-        d: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        h: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        m: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        s: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setStarted(true); }, { threshold: 0.5 });
+    if (targetRef.current) obs.observe(targetRef.current);
+    return () => obs.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (!started) return;
+    let current = 0;
+    const step = value / 60;
+    const id = setInterval(() => {
+      current = Math.min(current + step, value);
+      setDisplay(Math.floor(current));
+      if (current >= value) clearInterval(id);
+    }, 16);
+    return () => clearInterval(id);
+  }, [started, value]);
+
   return (
-    <main className="relative min-h-screen bg-[#050505] text-white selection:bg-[#d4a017] selection:text-black overflow-hidden">
-      {/* 3D Background */}
-      <div className="fixed inset-0 z-0">
-        <Scene />
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 lg:p-24">
-        <motion.div 
-          style={{ y, opacity }}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="text-center max-w-5xl w-full mt-20"
-        >
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8 inline-flex items-center gap-2 glass px-6 py-2 rounded-full text-sm font-medium text-[#d4a017] uppercase tracking-wider shadow-[0_0_15px_rgba(212,160,23,0.3)]"
-          >
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Official FIFA 2026 Technology
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-6xl md:text-8xl font-black tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500 leading-tight drop-shadow-2xl"
-          >
-            FIFA Nexus AI<br/>
-            <span className="text-4xl md:text-6xl font-light text-transparent bg-clip-text bg-gradient-to-r from-[#d4a017] to-yellow-200">
-              Intelligent Stadium OS
-            </span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto font-light leading-relaxed"
-          >
-            The world's most advanced generative AI platform for stadium operations, predictive crowd intelligence, and unparalleled fan experiences.
-          </motion.p>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <Link href="/fan" className="px-8 py-4 bg-[#d4a017] text-black font-bold rounded-full hover:bg-yellow-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(212,160,23,0.4)] flex items-center gap-2 w-full sm:w-auto justify-center">
-              Enter Fan Hub <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="#features" className="px-8 py-4 glass text-white font-semibold rounded-full hover:bg-white/10 hover:scale-105 transition-all duration-300 flex items-center gap-2 w-full sm:w-auto justify-center">
-              Explore Platform <Play className="w-5 h-5" />
-            </Link>
-          </motion.div>
-        </motion.div>
-
-        {/* Live Countdown Widget */}
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
-          className="relative mt-16 mx-auto glass-panel px-8 py-6 flex flex-wrap gap-8 shadow-2xl border border-white/10 w-[90%] max-w-2xl justify-center z-20"
-        >
-          <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-1">{timeLeft.d}</div>
-            <div className="text-xs text-[#d4a017] uppercase tracking-widest font-medium">Days</div>
-          </div>
-          <div className="w-px h-12 bg-white/20 self-center" />
-          <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-1">{timeLeft.h.toString().padStart(2, '0')}</div>
-            <div className="text-xs text-[#d4a017] uppercase tracking-widest font-medium">Hours</div>
-          </div>
-          <div className="w-px h-12 bg-white/20 self-center" />
-          <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-1">{timeLeft.m.toString().padStart(2, '0')}</div>
-            <div className="text-xs text-[#d4a017] uppercase tracking-widest font-medium">Minutes</div>
-          </div>
-          <div className="w-px h-12 bg-white/20 self-center" />
-          <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-1">{timeLeft.s.toString().padStart(2, '0')}</div>
-            <div className="text-xs text-[#d4a017] uppercase tracking-widest font-medium">Seconds</div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Feature Cards Section */}
-      <section id="features" className="relative z-10 py-32 px-6 lg:px-24 bg-gradient-to-b from-transparent via-[#050505] to-[#050505]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6">Centralized Intelligence</h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto font-light">
-              Four dedicated AI hubs powering a seamless ecosystem for fans, organizers, security, and volunteers.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FeatureCard 
-              title="Fan Copilot" 
-              desc="Real-time seat navigation, food ordering, and augmented reality stadium maps." 
-              icon={<MapIcon className="w-10 h-10 mb-6 text-[#4facfe]" />} 
-              href="/fan" 
-              delay={0.1}
-              color="hover:border-[#4facfe]/50 hover:shadow-[0_0_30px_rgba(79,172,254,0.2)]"
-            />
-            <FeatureCard 
-              title="Command Center" 
-              desc="Executive overview of crowd density, energy metrics, and automated AI orchestration." 
-              icon={<Activity className="w-10 h-10 mb-6 text-[#d4a017]" />} 
-              href="/organizer" 
-              delay={0.2}
-              color="hover:border-[#d4a017]/50 hover:shadow-[0_0_30px_rgba(212,160,23,0.2)]" 
-            />
-            <FeatureCard 
-              title="Security AI" 
-              desc="Predictive threat analysis, emergency route optimization, and live incident tracking." 
-              icon={<ShieldAlert className="w-10 h-10 mb-6 text-red-500" />} 
-              href="/security" 
-              delay={0.3}
-              color="hover:border-red-500/50 hover:shadow-[0_0_30px_rgba(239,68,68,0.2)]" 
-            />
-            <FeatureCard 
-              title="Volunteer Ops" 
-              desc="Dynamic task routing, SOS alerts, and multilingual AI assistance for staff." 
-              icon={<Users className="w-10 h-10 mb-6 text-green-400" />} 
-              href="/volunteer" 
-              delay={0.4}
-              color="hover:border-green-400/50 hover:shadow-[0_0_30px_rgba(74,222,128,0.2)]" 
-            />
-            <FeatureCard 
-              title="Medical Hub" 
-              desc="Live triage status, automated paramedic routing, and AI-predicted heatstroke alerts." 
-              icon={<HeartPulse className="w-10 h-10 mb-6 text-blue-500" />} 
-              href="/medical" 
-              delay={0.5}
-              color="hover:border-blue-500/50 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]" 
-            />
-            <FeatureCard 
-              title="Transport Hub" 
-              desc="Live metro status, predictive traffic rerouting, and dynamic VIP shuttle tracking." 
-              icon={<Bus className="w-10 h-10 mb-6 text-indigo-500" />} 
-              href="/transportation" 
-              delay={0.6}
-              color="hover:border-indigo-500/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.2)]" 
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Live Stats / Interactive Map Preview */}
-      <section className="relative z-10 py-32 px-6 lg:px-24 bg-[#050505]">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
-          <div className="flex-1 space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-sm">
-              <Zap className="w-4 h-4 text-yellow-400" /> Powered by Deep Learning
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold leading-tight">Predictive Crowd Intelligence. <br/><span className="text-gray-500">Before it happens.</span></h2>
-            <p className="text-lg text-gray-400 font-light">
-              Nexus AI continuously ingests thousands of data points—from turnstile throughput to thermal cameras—to anticipate bottlenecks, reroute fans, and deploy volunteers proactively.
-            </p>
-            <ul className="space-y-4">
-              <ListItem text="Sub-second latency WebSocket streams" />
-              <ListItem text="Retrieval-Augmented Generation (RAG) for procedures" />
-              <ListItem text="Dynamic Heatmaps & Pathfinding algorithms" />
-            </ul>
-          </div>
-          <div className="flex-1 w-full">
-            <div className="relative rounded-3xl overflow-hidden glass-panel border border-white/10 p-2">
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#d4a017]/20 to-transparent opacity-50 z-0" />
-              {/* Mock Map Image/Box for visual flair */}
-              <div className="relative z-10 h-[400px] w-full rounded-2xl bg-[#0a0a0a] border border-white/5 flex items-center justify-center overflow-hidden">
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-[#d4a017]/30 rounded-full animate-[spin_10s_linear_infinite]" />
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/10 rounded-full animate-[spin_8s_linear_infinite_reverse]" />
-                 <MapPin className="w-12 h-12 text-[#d4a017] drop-shadow-[0_0_15px_rgba(212,160,23,0.8)]" />
-                 <div className="absolute bottom-6 left-6 right-6 glass p-4 flex justify-between items-center text-sm">
-                   <div><div className="text-gray-400 text-xs uppercase mb-1">Density</div><div className="text-green-400 font-bold">OPTIMAL</div></div>
-                   <div><div className="text-gray-400 text-xs uppercase mb-1">Flow Rate</div><div className="text-white font-bold">1,240/min</div></div>
-                   <div><div className="text-gray-400 text-xs uppercase mb-1">Status</div><div className="text-blue-400 font-bold">AI ROUTING</div></div>
-                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Footer */}
-      <footer className="relative z-10 py-12 px-6 lg:px-24 border-t border-white/10 bg-[#020202]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#d4a017] to-yellow-600 flex items-center justify-center font-bold text-black">N</div>
-             <span className="font-semibold text-lg tracking-wide">NEXUS AI</span>
-          </div>
-          <div className="text-gray-500 text-sm">
-            © 2026 FIFA World Cup Technology Showcase. All rights reserved.
-          </div>
-          <div className="flex gap-4 text-sm text-gray-400">
-             <a href="#" className="hover:text-white transition-colors">Documentation</a>
-             <a href="#" className="hover:text-white transition-colors">Privacy</a>
-             <a href="#" className="hover:text-white transition-colors">Terms</a>
-          </div>
-        </div>
-      </footer>
-    </main>
+    <div ref={targetRef} className="text-data">
+      {display.toLocaleString()}{suffix}
+    </div>
   );
 }
 
-function FeatureCard({ title, desc, icon, href, delay, color }: { title: string, desc: string, icon: React.ReactNode, href: string, delay: number, color: string }) {
+// ─── Hub Card (Bento-style) ─────────────────────────────────────────────────
+interface HubCardProps {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  href: string;
+  delay: number;
+  accent: string;
+  accentBg: string;
+  accentGlow: string;
+  badge?: string;
+  large?: boolean;
+}
+
+function HubCard({ title, desc, icon, href, delay, accent, accentBg, accentGlow, badge, large }: HubCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 32 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6, delay }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={large ? "md:col-span-2" : ""}
     >
-      <Link href={href} className={`block group h-full glass-panel p-8 rounded-3xl border border-white/5 transition-all duration-500 ${color} bg-gradient-to-b from-white/[0.03] to-transparent`}>
-        <div className="flex flex-col h-full">
-          {icon}
-          <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-400 transition-all">{title}</h3>
-          <p className="text-gray-400 leading-relaxed font-light flex-grow">{desc}</p>
-          <div className="mt-8 flex items-center text-sm font-semibold uppercase tracking-wider text-gray-500 group-hover:text-white transition-colors">
-            Launch Platform <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
+      <Link href={href} className="group block h-full relative overflow-hidden rounded-2xl transition-all duration-500"
+        style={{
+          background: "rgba(10,10,12,0.7)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = accent + "55";
+          (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 1px ${accent}33, 0 20px 50px rgba(0,0,0,0.6), 0 0 60px ${accentGlow}`;
+          (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(0,0,0,0.4)";
+          (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+        }}
+      >
+        {/* Top accent line */}
+        <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${accent}60, transparent)` }} />
+
+        <div className="p-7 flex flex-col h-full min-h-[200px]">
+          {/* Icon + badge */}
+          <div className="flex items-start justify-between mb-6">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+              style={{ background: accentBg, border: `1px solid ${accent}40` }}
+            >
+              {icon}
+            </div>
+            {badge && (
+              <span
+                className="text-[9px] font-mono font-bold px-2 py-1 rounded-full uppercase tracking-wider"
+                style={{ background: accentBg, border: `1px solid ${accent}40`, color: accent }}
+              >
+                {badge}
+              </span>
+            )}
+          </div>
+
+          {/* Text */}
+          <div className="flex-1">
+            <h3
+              className="text-lg font-semibold text-white mb-2 tracking-tight"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {title}
+            </h3>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-light">
+              {desc}
+            </p>
+          </div>
+
+          {/* CTA */}
+          <div
+            className="mt-6 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider transition-all duration-300"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            <span className="group-hover:text-white transition-colors">Launch Platform</span>
+            <ArrowRight
+              className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1.5"
+              style={{ color: accent }}
+            />
           </div>
         </div>
       </Link>
@@ -273,11 +156,408 @@ function FeatureCard({ title, desc, icon, href, delay, color }: { title: string,
   );
 }
 
-function ListItem({ text }: { text: string }) {
+// ─── Main Page ──────────────────────────────────────────────────────────────
+export default function Home() {
+  const { scrollYProgress } = useScroll();
+  const heroY = useTransform(scrollYProgress, [0, 0.4], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
+  const smoothOpacity = useSpring(heroOpacity, { stiffness: 100, damping: 30 });
+
+  const wc2026 = new Date("2026-06-11T00:00:00Z");
+  const time = useCountdown(wc2026);
+
+  const hubs = [
+    { title: "Fan Copilot", desc: "Real-time seat navigation, in-seat food ordering, and augmented reality stadium maps for 80,000 fans.", icon: <MapPin className="w-5 h-5" style={{ color: "hsl(195,100%,60%)" }} />, href: "/fan", delay: 0.1, accent: "hsl(195,100%,60%)", accentBg: "hsla(195,100%,50%,0.1)", accentGlow: "hsla(195,100%,50%,0.15)", badge: "LIVE", large: true },
+    { title: "Command Center", desc: "Executive overview of crowd density, energy metrics, and automated AI orchestration.", icon: <Activity className="w-5 h-5" style={{ color: "hsl(43,90%,55%)" }} />, href: "/organizer", delay: 0.2, accent: "hsl(43,90%,55%)", accentBg: "hsla(43,90%,48%,0.1)", accentGlow: "hsla(43,90%,48%,0.15)" },
+    { title: "Security AI", desc: "Predictive threat analysis, emergency route optimization, and live incident tracking.", icon: <ShieldAlert className="w-5 h-5" style={{ color: "hsl(0,85%,60%)" }} />, href: "/security", delay: 0.3, accent: "hsl(0,85%,60%)", accentBg: "hsla(0,85%,55%,0.1)", accentGlow: "hsla(0,85%,55%,0.15)" },
+    { title: "Volunteer Ops", desc: "Dynamic task routing, SOS alerts, and multilingual AI assistance for 5,000+ staff.", icon: <Users className="w-5 h-5" style={{ color: "hsl(145,65%,50%)" }} />, href: "/volunteer", delay: 0.4, accent: "hsl(145,65%,50%)", accentBg: "hsla(145,65%,42%,0.1)", accentGlow: "hsla(145,65%,42%,0.15)" },
+    { title: "Medical Hub", desc: "Live triage status, automated paramedic routing, and AI-predicted heatstroke alerts.", icon: <HeartPulse className="w-5 h-5" style={{ color: "hsl(220,90%,65%)" }} />, href: "/medical", delay: 0.5, accent: "hsl(220,90%,65%)", accentBg: "hsla(220,90%,60%,0.1)", accentGlow: "hsla(220,90%,60%,0.15)" },
+    { title: "Transport Hub", desc: "Live metro status, predictive traffic rerouting, and dynamic VIP shuttle tracking.", icon: <Bus className="w-5 h-5" style={{ color: "hsl(250,85%,70%)" }} />, href: "/transportation", delay: 0.6, accent: "hsl(250,85%,70%)", accentBg: "hsla(250,85%,65%,0.1)", accentGlow: "hsla(250,85%,65%,0.15)" },
+  ];
+
+  const stats = [
+    { label: "Fan Interactions / Day", value: 2400000, suffix: "+", icon: <Globe className="w-4 h-4" /> },
+    { label: "AI Agents Active",        value: 48,       suffix: "",   icon: <Cpu  className="w-4 h-4" /> },
+    { label: "Stadiums Covered",        value: 16,       suffix: "",   icon: <Eye  className="w-4 h-4" /> },
+    { label: "Data Streams Live",       value: 3840,     suffix: "",   icon: <Wifi className="w-4 h-4" /> },
+  ];
+
   return (
-    <li className="flex items-center gap-3 text-gray-300">
-      <div className="w-1.5 h-1.5 rounded-full bg-[#d4a017]" />
-      {text}
-    </li>
+    <main className="relative min-h-screen bg-[var(--surface-0)] text-white overflow-hidden">
+      {/* 3D Background */}
+      <div className="fixed inset-0 z-0">
+        <Scene />
+      </div>
+
+      {/* ── HERO ──────────────────────────────────────────────────────── */}
+      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 lg:px-24">
+        <motion.div
+          style={{ y: heroY, opacity: smoothOpacity }}
+          className="text-center max-w-5xl w-full pt-24"
+        >
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="mb-10 inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-[11px] font-mono font-bold uppercase tracking-widest"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(212,160,23,0.3)",
+              color: "var(--nexus-gold-bright)",
+              boxShadow: "0 0 20px var(--nexus-gold-glow)",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--nexus-red)] animate-pulse" />
+            FIFA World Cup 2026 — Official AI Platform
+          </motion.div>
+
+          {/* Main heading */}
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.35 }}
+            className="text-display mb-6 leading-none"
+            style={{ fontSize: "clamp(3rem, 8vw, 7rem)" }}
+          >
+            <span className="gradient-white">FIFA</span>{" "}
+            <span className="gradient-gold">Nexus AI</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.55 }}
+            className="text-xl md:text-2xl font-light mb-4 tracking-tight"
+            style={{ color: "var(--text-secondary)", fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Intelligent Stadium Operating System
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-12 font-light"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            The world's most advanced generative AI platform for stadium operations,
+            predictive crowd intelligence, and unparalleled fan experiences.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.85 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Link
+              href="/fan"
+              className="btn btn-primary btn-lg group"
+            >
+              Enter Fan Hub
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+            </Link>
+            <Link
+              href="/organizer"
+              className="btn btn-ghost btn-lg"
+            >
+              Command Center
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* ── Countdown Widget ────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.1 }}
+          className="relative mt-20 z-20"
+        >
+          <div
+            className="px-8 py-6 rounded-2xl"
+            style={{
+              background: "rgba(8,8,10,0.85)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+            }}
+          >
+            <p className="text-label text-[9px] text-center text-[var(--text-tertiary)] mb-4">
+              FIFA WORLD CUP 2026 KICKS OFF IN
+            </p>
+            <div className="flex items-center gap-6">
+              {[
+                { v: time.d,  l: "DAYS" },
+                { v: time.h,  l: "HOURS" },
+                { v: time.m,  l: "MIN" },
+                { v: time.s,  l: "SEC" },
+              ].map(({ v, l }, i) => (
+                <div key={l} className="flex items-center gap-6">
+                  {i > 0 && (
+                    <span
+                      className="text-3xl font-bold text-data animate-pulse"
+                      style={{ color: "rgba(255,255,255,0.2)" }}
+                    >
+                      :
+                    </span>
+                  )}
+                  <div className="text-center">
+                    <div
+                      className="text-data text-4xl font-bold tabular-nums text-white"
+                      style={{ textShadow: "0 0 20px var(--nexus-gold-glow)", letterSpacing: "-0.02em" }}
+                    >
+                      {String(v).padStart(2, "0")}
+                    </div>
+                    <div className="text-label text-[9px] mt-1" style={{ color: "var(--nexus-gold-bright)" }}>
+                      {l}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Scroll cue */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          <span className="text-[10px] font-mono tracking-widest uppercase">Explore</span>
+          <ChevronDown className="w-4 h-4 animate-bounce" />
+        </motion.div>
+      </section>
+
+      {/* ── LIVE STATS STRIP ──────────────────────────────────────────── */}
+      <section className="relative z-10 py-12 px-6 border-y border-white/5" style={{ background: "rgba(6,6,8,0.8)", backdropFilter: "blur(20px)" }}>
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map(({ label, value, suffix, icon }) => (
+            <div key={label} className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2" style={{ color: "var(--nexus-gold-bright)" }}>
+                {icon}
+                <span className="text-label text-[9px]">{label}</span>
+              </div>
+              <div
+                className="text-3xl font-bold text-white tabular-nums"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                <AnimatedNumber value={value} suffix={suffix} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── HUB GRID ──────────────────────────────────────────────────── */}
+      <section id="features" className="relative z-10 py-28 px-6 lg:px-24">
+        <div className="max-w-7xl mx-auto">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="mb-16"
+          >
+            <div className="data-pill data-pill-gold mb-6">Six AI Hubs</div>
+            <h2
+              className="text-display text-white mb-4"
+              style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}
+            >
+              Centralized{" "}
+              <span className="gradient-gold">Intelligence</span>
+            </h2>
+            <p className="text-lg max-w-2xl" style={{ color: "var(--text-secondary)", fontFamily: "'Space Grotesk', sans-serif" }}>
+              Six dedicated AI hubs powering a seamless ecosystem for fans, organizers, security, volunteers, medical, and transportation.
+            </p>
+          </motion.div>
+
+          {/* Bento grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {hubs.map((hub) => (
+              <HubCard key={hub.href} {...hub} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── INTELLIGENCE SECTION ──────────────────────────────────────── */}
+      <section className="relative z-10 py-28 px-6 lg:px-24" style={{ background: "rgba(4,4,6,0.6)" }}>
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-center">
+          {/* Left text */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="flex-1 space-y-7"
+          >
+            <div className="data-pill data-pill-cyan">
+              <Zap className="w-3 h-3" />
+              Deep Learning
+            </div>
+            <h2
+              className="text-display leading-tight text-white"
+              style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)" }}
+            >
+              Predictive Crowd
+              <br />
+              <span className="gradient-gold">Intelligence.</span>
+              <br />
+              <span style={{ color: "var(--text-secondary)", fontWeight: 400, fontSize: "0.6em" }}>
+                Before it happens.
+              </span>
+            </h2>
+            <p className="text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              Nexus AI continuously ingests thousands of data points — from turnstile throughput
+              to thermal cameras — to anticipate bottlenecks, reroute fans, and deploy volunteers proactively.
+            </p>
+
+            <ul className="space-y-3">
+              {[
+                "Sub-second latency WebSocket data streams",
+                "Retrieval-Augmented Generation (RAG) for SOPs",
+                "Dynamic heatmaps & real-time pathfinding",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: "var(--nexus-gold-bright)" }}
+                  />
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <Link href="/organizer" className="btn btn-ghost inline-flex">
+              Open Command Center <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+
+          {/* Right: Digital Twin Preview */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="flex-1 w-full max-w-lg"
+          >
+            <div
+              className="rounded-2xl overflow-hidden relative"
+              style={{
+                border: "1px solid rgba(255,255,255,0.07)",
+                boxShadow: "0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)",
+              }}
+            >
+              {/* Top bar */}
+              <div
+                className="flex items-center gap-2 px-5 py-3 border-b border-white/5"
+                style={{ background: "rgba(255,255,255,0.03)" }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--nexus-red)] animate-pulse" />
+                <span className="text-label text-[9px] text-[var(--text-tertiary)]">DIGITAL TWIN · LIVE FEED</span>
+              </div>
+
+              {/* Content */}
+              <div
+                className="relative h-72 flex items-center justify-center overflow-hidden"
+                style={{ background: "rgba(4,4,6,0.9)" }}
+              >
+                {/* Animated rings */}
+                {[64, 48, 32, 16].map((size, i) => (
+                  <div
+                    key={i}
+                    className="absolute rounded-full"
+                    style={{
+                      width: `${size * 4}px`,
+                      height: `${size * 4}px`,
+                      border: `1px solid ${i % 2 === 0 ? "rgba(212,160,23,0.2)" : "rgba(0,200,255,0.12)"}`,
+                      animation: `${i % 2 === 0 ? "rotate-slow" : "spin-reverse"} ${10 + i * 4}s linear infinite`,
+                    }}
+                  />
+                ))}
+
+                {/* Center icon */}
+                <div
+                  className="relative z-10 w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: "hsla(43,90%,48%,0.12)",
+                    border: "1px solid rgba(212,160,23,0.4)",
+                    boxShadow: "0 0 30px var(--nexus-gold-glow)",
+                  }}
+                >
+                  <MapPin className="w-6 h-6 text-[var(--nexus-gold-bright)]" />
+                </div>
+
+                {/* Bottom metrics strip */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 flex justify-around items-center px-4 py-3"
+                  style={{
+                    background: "rgba(4,4,6,0.9)",
+                    borderTop: "1px solid rgba(255,255,255,0.05)",
+                  }}
+                >
+                  {[
+                    { l: "Density", v: "OPTIMAL", c: "var(--nexus-green)" },
+                    { l: "Flow Rate", v: "1,240/min", c: "white" },
+                    { l: "Status", v: "AI ROUTING", c: "var(--nexus-cyan)" },
+                  ].map(({ l, v, c }) => (
+                    <div key={l} className="text-center">
+                      <div className="text-label text-[8px] mb-1" style={{ color: "var(--text-tertiary)" }}>{l}</div>
+                      <div className="text-data text-xs font-bold" style={{ color: c }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ────────────────────────────────────────────────────── */}
+      <footer
+        className="relative z-10 py-10 px-6 lg:px-24"
+        style={{
+          background: "rgba(4,4,6,0.95)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-black text-sm"
+              style={{
+                background: "linear-gradient(135deg, var(--nexus-gold), hsl(38,95%,42%))",
+                boxShadow: "0 4px 12px var(--nexus-gold-glow)",
+              }}
+            >
+              N
+            </div>
+            <span
+              className="font-semibold text-base text-white tracking-wide"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              NEXUS AI
+            </span>
+          </div>
+
+          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+            © 2026 FIFA World Cup Technology Showcase. All rights reserved.
+          </p>
+
+          <div className="flex gap-6 text-sm" style={{ color: "var(--text-tertiary)" }}>
+            {["Documentation", "Privacy", "Terms"].map((l) => (
+              <a key={l} href="#" className="hover:text-white transition-colors duration-200">{l}</a>
+            ))}
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
