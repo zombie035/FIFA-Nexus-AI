@@ -69,38 +69,66 @@ export default function NavHeader({
       transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="sticky top-0 z-40 w-full"
     >
-      {/* Top accent line */}
-      <div className={`h-[1px] w-full ${accent.border} bg-gradient-to-r from-transparent via-current to-transparent opacity-60`} />
+      {/* Top accent line — animated gradient sweep */}
+      <div
+        style={{
+          height: "1px",
+          width: "100%",
+          background: `linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%)`,
+          opacity: 0.55,
+          position: "relative",
+          overflow: "hidden",
+        }}
+        className={accent.text}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.6) 50%, transparent 80%)",
+            backgroundSize: "200% 100%",
+            animation: "scan-horizontal 4s ease-in-out infinite",
+          }}
+        />
+      </div>
 
       <div
         className="flex items-center justify-between gap-4 px-6 py-3"
         style={{
-          background: "rgba(8,8,10,0.85)",
+          background: "rgba(7,7,9,0.88)",
           backdropFilter: "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(255,255,255,0.055)",
         }}
       >
-        {/* Left: Back + Title */}
+        {/* Left: Premium Back Button + Title */}
         <div className="flex items-center gap-4 min-w-0">
           <Link
             href={backHref}
-            className={`group flex-shrink-0 p-2 rounded-lg border border-transparent hover:border-white/10 hover:bg-white/5 transition-all duration-200 ${accent.text}`}
+            className={`btn-back flex-shrink-0 ${accent.text}`}
             aria-label="Go back"
           >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
+            <ArrowLeft
+              style={{
+                width: "14px",
+                height: "14px",
+                transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+              }}
+              className="group-hover:-translate-x-0.5"
+            />
+            <span>Back</span>
           </Link>
 
           <div className="min-w-0">
             <div className="flex items-baseline gap-3 flex-wrap">
               <h1
                 className="text-lg font-semibold tracking-tight text-white truncate"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
               >
                 {title}
               </h1>
               {subtitle && (
-                <span className={`text-sm font-medium ${accent.text} truncate`}>
+                <span className={`text-xs font-mono font-semibold tracking-widest uppercase ${accent.text} truncate opacity-70`}>
                   {subtitle}
                 </span>
               )}
@@ -108,30 +136,68 @@ export default function NavHeader({
           </div>
         </div>
 
-        {/* Right: Status + Clock + Extra controls */}
+        {/* Right: Premium Status Badge + Scoreboard Clock + Extra controls */}
         <div className="flex items-center gap-3 flex-shrink-0">
           {children}
 
-          {/* Status badge */}
+          {/* Premium LED Status Badge */}
           <div
-            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border ${accent.bg} ${accent.border}`}
-            style={{ borderWidth: "1px" }}
+            className={`hidden sm:flex status-badge-premium ${accent.bg} ${accent.border}`}
+            style={{
+              border: "1px solid",
+              boxShadow: `0 0 20px ${
+                accentColor === "gold" ? "rgba(212,160,23,0.15)" :
+                accentColor === "red" ? "rgba(220,50,50,0.15)" :
+                accentColor === "cyan" ? "rgba(0,200,255,0.12)" :
+                accentColor === "green" ? "rgba(0,200,100,0.12)" :
+                "rgba(100,140,255,0.12)"
+              }`,
+            }}
           >
             <span className={status.dot} />
-            <span className={`text-label text-[10px] ${status.labelClass}`}>
+            <span className={`${status.labelClass}`}>
               {displayStatus}
             </span>
           </div>
 
-          {/* Live clock */}
-          <div className="hidden md:flex items-center gap-1.5 text-[var(--text-tertiary)]">
-            <Clock className="w-3 h-3" />
-            <span className="text-data text-[11px] tabular-nums">{liveTime}</span>
+          {/* Scoreboard-style live clock */}
+          <div
+            className="hidden md:flex items-center gap-1.5"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: "8px",
+              padding: "4px 10px",
+            }}
+          >
+            <Clock style={{ width: "11px", height: "11px", color: "var(--text-tertiary)" }} />
+            <span
+              className="text-data tabular-nums"
+              style={{
+                fontSize: "11px",
+                color: "var(--text-secondary)",
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "0.06em",
+              }}
+            >
+              {liveTime}
+            </span>
           </div>
 
-          {/* Radio signal icon */}
-          <div className="relative">
-            <Radio className={`w-4 h-4 ${accent.text} animate-pulse`} />
+          {/* Animated signal indicator */}
+          <div className="relative flex items-center justify-center" style={{ width: 20, height: 20 }}>
+            <Radio
+              className={`w-3.5 h-3.5 ${accent.text}`}
+              style={{ animation: "pulse-slow 2s ease-in-out infinite" }}
+            />
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                border: `1px solid currentColor`,
+                animation: "ping-ring 2.5s cubic-bezier(0,0,0.2,1) infinite",
+                opacity: 0,
+              }}
+            />
           </div>
         </div>
       </div>

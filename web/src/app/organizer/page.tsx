@@ -107,12 +107,18 @@ function DirectiveCard({ type, title, body, cta, ctaLoading, ctaDisabled, onCta,
           <button
             onClick={onCta}
             disabled={ctaLoading}
-            className="w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all duration-200"
-            style={{ background: `${config.accent}18`, border: `1px solid ${config.border}`, color: config.accent }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = `${config.accent}30`)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = `${config.accent}18`)}
+            id={`directive-cta-${title.replace(/\s+/g, "-").toLowerCase()}`}
+            className={`btn w-full ${
+              type === "warn" ? "btn-primary btn-sm" :
+              type === "ok"  ? "btn-success btn-sm" :
+              "btn-ai btn-sm"
+            } ${ctaLoading ? "btn-loading" : ""}`}
+            style={{ justifyContent: "center" }}
           >
             {ctaLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {!ctaLoading && type === "warn"  && <span style={{ fontSize: "0.9em" }}>⚡</span>}
+            {!ctaLoading && type === "ok"   && <span style={{ fontSize: "0.9em" }}>✓</span>}
+            {!ctaLoading && type === "info" && <span style={{ fontSize: "0.9em" }}>🧠</span>}
             {cta}
           </button>
         )}
@@ -415,9 +421,12 @@ export default function OrganizerDashboard() {
             Flow rate in Zone 6 is diminishing.
           </p>
           <button
+            id="modal-acknowledge-btn"
             onClick={() => setActiveModal(null)}
-            className="btn btn-primary w-full"
+            className="btn btn-success w-full"
+            style={{ justifyContent: "center" }}
           >
+            <span style={{ fontSize: "1em" }}>✓</span>
             Acknowledge
           </button>
         </div>

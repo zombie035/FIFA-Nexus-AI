@@ -171,11 +171,12 @@ export default function SecurityDashboard() {
       >
         {/* Export + Threat selector in header */}
         <button
+          id="export-logs-btn"
           onClick={() => setActiveModal("report-log")}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--text-secondary)" }}
+          className="btn btn-ghost btn-sm hidden sm:flex items-center gap-1.5"
         >
-          <Download className="w-3.5 h-3.5" /> Export Logs
+          <Download className="w-3.5 h-3.5" />
+          Export Logs
         </button>
 
         <div
@@ -305,9 +306,10 @@ export default function SecurityDashboard() {
                   </h3>
                 </div>
                 <button
+                  id="create-incident-btn"
                   onClick={() => setActiveModal("create-incident")}
-                  className="p-1.5 rounded-lg transition-colors"
-                  style={{ background: "hsla(0,85%,55%,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--nexus-red)" }}
+                  className="btn btn-emergency btn-sm"
+                  style={{ padding: "6px 10px" }}
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -340,10 +342,14 @@ export default function SecurityDashboard() {
                         <p className="text-sm text-white mb-2">{inc.desc}</p>
                         {inc.status !== "RESOLVED" && (
                           <button
+                            id={`resolve-incident-${inc.id}-btn`}
                             onClick={() => handleResolveIncident(inc.id)}
                             disabled={loading === `resolve-${inc.id}`}
-                            className="ml-auto flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold transition-all disabled:opacity-50"
-                            style={{ background: `${sty.bg}`, border: `1px solid ${sty.border}`, color: sty.text }}
+                            className={`btn btn-sm ml-auto ${
+                              inc.severity === "CRITICAL" || inc.severity === "HIGH"
+                                ? "btn-danger"
+                                : "btn-success"
+                            } ${loading === `resolve-${inc.id}` ? "btn-loading" : ""}`}
                           >
                             {loading === `resolve-${inc.id}` && <Loader2 className="w-3 h-3 animate-spin" />}
                             Close Incident
@@ -383,11 +389,12 @@ export default function SecurityDashboard() {
                       Send 3 officers to Gate 4 turnstiles. Inflow surges indicate density will exceed thresholds within 10 minutes.
                     </p>
                     <button
+                      id="ai-deploy-officers-btn"
                       onClick={() => { setFormLocation("Gate 4"); setDispatchLocation("Gate 4"); setDispatchCount(3); setActiveModal("dispatch"); }}
-                      className="w-full py-2 rounded-lg text-xs font-bold transition-all duration-200"
-                      style={{ background: "hsla(195,100%,50%,0.12)", border: "1px solid rgba(0,200,255,0.25)", color: "var(--nexus-cyan)" }}
+                      className="btn btn-ai btn-sm w-full"
+                      style={{ justifyContent: "center" }}
                     >
-                      Deploy 3 Officers
+                      🤖 Deploy 3 Officers
                     </button>
                   </div>
                 </div>
@@ -470,8 +477,15 @@ export default function SecurityDashboard() {
             <label className="text-label text-[10px] block mb-2" style={{ color: "var(--text-tertiary)" }}>Incident Description</label>
             <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Describe the incident..." className="nexus-input h-24 resize-none" required />
           </div>
-          <button type="submit" disabled={loading === "create"} className="btn btn-danger w-full">
+          <button
+            id="file-incident-submit-btn"
+            type="submit"
+            disabled={loading === "create"}
+            className={`btn btn-emergency w-full ${loading === "create" ? "btn-loading" : ""}`}
+            style={{ justifyContent: "center" }}
+          >
             {loading === "create" && <Loader2 className="w-4 h-4 animate-spin" />}
+            {!loading && <span>🚨</span>}
             File Incident and Dispatch
           </button>
         </form>
@@ -489,8 +503,15 @@ export default function SecurityDashboard() {
             <label className="text-label text-[10px] block mb-2" style={{ color: "var(--text-tertiary)" }}>Officer Units</label>
             <input type="number" min={1} max={15} value={dispatchCount} onChange={(e) => setDispatchCount(parseInt(e.target.value) || 1)} className="nexus-input" />
           </div>
-          <button type="submit" disabled={loading === "dispatch-officers"} className="btn btn-primary w-full" style={{ background: "var(--nexus-cyan)", color: "#000" }}>
+          <button
+            id="dispatch-officers-submit-btn"
+            type="submit"
+            disabled={loading === "dispatch-officers"}
+            className={`btn btn-security w-full ${loading === "dispatch-officers" ? "btn-loading" : ""}`}
+            style={{ justifyContent: "center" }}
+          >
             {loading === "dispatch-officers" && <Loader2 className="w-4 h-4 animate-spin" />}
+            {!loading && <span>🛡️</span>}
             Authorize Dispatch Orders
           </button>
         </form>
@@ -511,8 +532,22 @@ export default function SecurityDashboard() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setFormLocation(activeModal === "cam-1" ? "Gate 4" : activeModal === "cam-2" ? "Sector C" : "Gate 6"); setActiveModal("create-incident"); }} className="btn btn-ghost text-xs" style={{ color: "var(--nexus-red)", borderColor: "rgba(239,68,68,0.25)" }}>Log Incident at Camera</button>
-              <button onClick={() => { setDispatchLocation(activeModal === "cam-1" ? "Gate 4" : activeModal === "cam-2" ? "Sector C" : "Gate 6"); setDispatchCount(2); setActiveModal("dispatch"); }} className="btn btn-ghost text-xs" style={{ color: "var(--nexus-cyan)", borderColor: "rgba(0,200,255,0.25)" }}>Dispatch Patrol to Cam</button>
+              <button
+                id="cam-log-incident-btn"
+                onClick={() => { setFormLocation(activeModal === "cam-1" ? "Gate 4" : activeModal === "cam-2" ? "Sector C" : "Gate 6"); setActiveModal("create-incident"); }}
+                className="btn btn-emergency btn-sm"
+                style={{ justifyContent: "center" }}
+              >
+                🚨 Log Incident
+              </button>
+              <button
+                id="cam-dispatch-patrol-btn"
+                onClick={() => { setDispatchLocation(activeModal === "cam-1" ? "Gate 4" : activeModal === "cam-2" ? "Sector C" : "Gate 6"); setDispatchCount(2); setActiveModal("dispatch"); }}
+                className="btn btn-security btn-sm"
+                style={{ justifyContent: "center" }}
+              >
+                🛡️ Dispatch Patrol
+              </button>
             </div>
           </div>
         </Modal>
@@ -530,7 +565,13 @@ export default function SecurityDashboard() {
               <div key={i.id}>[{i.time}] #{i.id} — {i.location} | {i.severity} | {i.status}<br />&nbsp;&nbsp;{i.desc}</div>
             ))}
           </div>
-          <button onClick={() => { addToast("success", "Log downloaded."); setActiveModal(null); }} className="btn btn-ghost w-full">
+          <button
+            id="download-log-btn"
+            onClick={() => { addToast("success", "Log downloaded."); setActiveModal(null); }}
+            className="btn btn-ghost w-full"
+            style={{ justifyContent: "center" }}
+          >
+            <Download className="w-4 h-4" />
             Download Log Report
           </button>
         </div>

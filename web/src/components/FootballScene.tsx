@@ -458,12 +458,78 @@ function CameraController() {
    HUB DATA
 ───────────────────────────────────────────────────────────── */
 const HUBS = [
-  { title: "Fan Copilot",    desc: "AR navigation & in-seat ordering for 80K fans.",   href: "/fan",            color: "hsl(195,100%,60%)", icon: "🗺️" },
-  { title: "Command Center", desc: "Live crowd intelligence & AI orchestration.",       href: "/organizer",      color: "hsl(43,90%,55%)",   icon: "⚡" },
-  { title: "Security AI",    desc: "Predictive threat analysis & incident command.",    href: "/security",       color: "hsl(0,85%,60%)",    icon: "🛡️" },
-  { title: "Volunteer Ops",  desc: "Dynamic task routing & multilingual support.",     href: "/volunteer",      color: "hsl(145,65%,50%)",  icon: "👥" },
-  { title: "Medical Hub",    desc: "AI-predicted heatstroke alerts & live triage.",    href: "/medical",        color: "hsl(220,90%,65%)",  icon: "💊" },
-  { title: "Transport Hub",  desc: "Metro AI, VIP shuttle & predictive rerouting.",    href: "/transportation", color: "hsl(250,85%,70%)",  icon: "🚌" },
+  {
+    title: "Fan Copilot",
+    desc: "AR navigation & in-seat ordering for 80K fans.",
+    href: "/fan",
+    color: "hsl(195,100%,60%)",
+    glowColor: "rgba(0,200,255,0.22)",
+    borderColor: "rgba(0,200,255,0.35)",
+    bgColor: "rgba(0,200,255,0.06)",
+    icon: "🗺️",
+    btnLabel: "Launch Fan Hub",
+    category: "AI Navigation",
+  },
+  {
+    title: "Command Center",
+    desc: "Live crowd intelligence & AI orchestration.",
+    href: "/organizer",
+    color: "hsl(43,90%,55%)",
+    glowColor: "rgba(212,160,23,0.22)",
+    borderColor: "rgba(212,160,23,0.38)",
+    bgColor: "rgba(212,160,23,0.06)",
+    icon: "⚡",
+    btnLabel: "Enter Command",
+    category: "Operations",
+  },
+  {
+    title: "Security AI",
+    desc: "Predictive threat analysis & incident command.",
+    href: "/security",
+    color: "hsl(0,85%,60%)",
+    glowColor: "rgba(220,50,50,0.22)",
+    borderColor: "rgba(220,50,50,0.38)",
+    bgColor: "rgba(220,50,50,0.06)",
+    icon: "🛡️",
+    btnLabel: "Security Ops",
+    category: "Threat Intelligence",
+  },
+  {
+    title: "Volunteer Ops",
+    desc: "Dynamic task routing & multilingual support.",
+    href: "/volunteer",
+    color: "hsl(145,65%,50%)",
+    glowColor: "rgba(0,180,100,0.2)",
+    borderColor: "rgba(0,180,100,0.35)",
+    bgColor: "rgba(0,180,100,0.06)",
+    icon: "👥",
+    btnLabel: "Volunteer Hub",
+    category: "Team Management",
+  },
+  {
+    title: "Medical Hub",
+    desc: "AI-predicted heatstroke alerts & live triage.",
+    href: "/medical",
+    color: "hsl(220,90%,65%)",
+    glowColor: "rgba(50,100,255,0.2)",
+    borderColor: "rgba(50,100,255,0.32)",
+    bgColor: "rgba(50,100,255,0.06)",
+    icon: "💊",
+    btnLabel: "Medical Command",
+    category: "Health & Safety",
+  },
+  {
+    title: "Transport Hub",
+    desc: "Metro AI, VIP shuttle & predictive rerouting.",
+    href: "/transportation",
+    color: "hsl(250,85%,70%)",
+    glowColor: "rgba(120,60,255,0.2)",
+    borderColor: "rgba(120,60,255,0.32)",
+    bgColor: "rgba(120,60,255,0.06)",
+    icon: "🚌",
+    btnLabel: "Transport AI",
+    category: "Logistics",
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -504,7 +570,7 @@ function HTMLOverlay() {
       <section style={{ ...sectionStyle("0vh"), flexDirection: "column", justifyContent: "flex-end", paddingBottom: "9vh", pointerEvents: "none", textAlign: "center" }}>
         {/* Badge */}
         <div style={{ ...badgeStyle, background: "rgba(212,160,23,0.1)", border: "1px solid rgba(212,160,23,0.3)", color: "#d4a017", marginBottom: "28px" }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff4444", display: "inline-block" }} />
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff4444", display: "inline-block", boxShadow: "0 0 8px rgba(255,68,68,0.8)", animation: "btn-emergency-pulse 1.8s ease-in-out infinite" }} />
           FIFA World Cup 2026 · Official AI Platform
         </div>
 
@@ -538,26 +604,64 @@ function HTMLOverlay() {
           Generative AI powering crowd intelligence, real-time operations, and unparalleled fan experiences at the FIFA World Cup 2026.
         </p>
 
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", pointerEvents: "auto" }}>
-          <Link href="/fan" style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "13px 26px", borderRadius: "100px",
-            background: "linear-gradient(135deg, #d4a017, hsl(38,95%,42%))",
-            color: "#000", fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 700, fontSize: "0.875rem", textDecoration: "none",
-            boxShadow: "0 4px 28px rgba(212,160,23,0.45)",
-          }}>
-            Enter Fan Hub →
+        {/* CTAs — Premium Buttons */}
+        <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap", pointerEvents: "auto" }}>
+          {/* Primary: Fan Hub — Championship Gold */}
+          <Link
+            href="/fan"
+            id="hero-cta-fan"
+            className="btn btn-fan btn-lg"
+            style={{ textDecoration: "none" }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "perspective(600px) translateZ(3px) translateY(-4px)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "";
+            }}
+            onMouseDown={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "perspective(600px) translateZ(-2px) translateY(2px) scale(0.975)";
+            }}
+            onMouseUp={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "perspective(600px) translateZ(3px) translateY(-4px)";
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "1.1em" }}>⚡</span>
+              Enter Fan Hub
+              <span style={{
+                display: "inline-block",
+                transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+              }}>→</span>
+            </span>
           </Link>
-          <Link href="/organizer" style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "13px 26px", borderRadius: "100px",
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.13)",
-            color: "white", fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 600, fontSize: "0.875rem", textDecoration: "none",
-            backdropFilter: "blur(12px)",
-          }}>
+
+          {/* Secondary: Command Center — Frosted Glass */}
+          <Link
+            href="/organizer"
+            id="hero-cta-command"
+            className="btn btn-ghost btn-lg"
+            style={{ textDecoration: "none" }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "perspective(600px) translateZ(1px) translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "";
+            }}
+            onMouseDown={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "perspective(600px) translateZ(-1px) translateY(1px)";
+            }}
+            onMouseUp={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "perspective(600px) translateZ(1px) translateY(-2px)";
+            }}
+          >
             Command Center
           </Link>
         </div>
@@ -623,31 +727,131 @@ function HTMLOverlay() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "14px", pointerEvents: "auto" }}>
             {HUBS.map((hub) => (
-              <a key={hub.href} href={hub.href} style={{
-                display: "block", padding: "24px", borderRadius: "18px",
-                background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)",
-                backdropFilter: "blur(20px)", textDecoration: "none", transition: "all 0.22s ease",
-              }}
+              <a
+                key={hub.href}
+                href={hub.href}
+                id={`hub-card-${hub.href.replace("/", "")}`}
+                style={{
+                  display: "block", padding: "24px", borderRadius: "18px",
+                  background: hub.bgColor,
+                  border: `1px solid ${hub.borderColor}`,
+                  backdropFilter: "blur(20px)",
+                  textDecoration: "none",
+                  transition: "all 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+                  position: "relative",
+                  overflow: "hidden",
+                  boxShadow: `0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px ${hub.borderColor}`,
+                }}
                 onMouseEnter={(e) => {
                   const el = e.currentTarget as HTMLElement;
-                  el.style.background = `${hub.color}14`;
-                  el.style.borderColor = `${hub.color}45`;
-                  el.style.transform = "translateY(-5px)";
-                  el.style.boxShadow = `0 20px 48px ${hub.color}18`;
+                  el.style.background = `${hub.bgColor.replace("0.06", "0.12")}`;
+                  el.style.transform = "translateY(-6px) scale(1.01)";
+                  el.style.boxShadow = `0 20px 48px rgba(0,0,0,0.4), 0 0 0 1px ${hub.borderColor}, 0 0 60px ${hub.glowColor}`;
+                  const arrow = el.querySelector(".hub-arrow") as HTMLElement;
+                  if (arrow) arrow.style.transform = "translateX(4px)";
+                  const launch = el.querySelector(".hub-launch") as HTMLElement;
+                  if (launch) launch.style.opacity = "1";
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLElement;
-                  el.style.background = "rgba(255,255,255,0.025)";
-                  el.style.borderColor = "rgba(255,255,255,0.07)";
-                  el.style.transform = "translateY(0)";
-                  el.style.boxShadow = "none";
+                  el.style.background = hub.bgColor;
+                  el.style.transform = "translateY(0) scale(1)";
+                  el.style.boxShadow = `0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px ${hub.borderColor}`;
+                  const arrow = el.querySelector(".hub-arrow") as HTMLElement;
+                  if (arrow) arrow.style.transform = "translateX(0)";
+                  const launch = el.querySelector(".hub-launch") as HTMLElement;
+                  if (launch) launch.style.opacity = "0.6";
+                }}
+                onMouseDown={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "translateY(-2px) scale(0.99)";
+                }}
+                onMouseUp={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "translateY(-6px) scale(1.01)";
                 }}
               >
-                <div style={{ fontSize: "28px", marginBottom: "14px" }}>{hub.icon}</div>
-                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "1rem", fontWeight: 600, color: "white", marginBottom: "8px" }}>{hub.title}</h3>
-                <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.42)", lineHeight: 1.65 }}>{hub.desc}</p>
-                <div style={{ marginTop: "16px", fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: hub.color }}>
-                  Launch →
+                {/* Top accent line */}
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+                  background: `linear-gradient(90deg, transparent, ${hub.color}, transparent)`,
+                }} />
+
+                {/* Corner glow */}
+                <div style={{
+                  position: "absolute", top: "16px", right: "16px",
+                  width: "60px", height: "60px",
+                  borderRadius: "50%",
+                  background: `radial-gradient(circle, ${hub.glowColor.replace("0.22", "0.3")} 0%, transparent 70%)`,
+                  filter: "blur(8px)",
+                  pointerEvents: "none",
+                }} />
+
+                {/* Icon */}
+                <div style={{
+                  fontSize: "26px", marginBottom: "14px",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: "46px", height: "46px",
+                  borderRadius: "12px",
+                  background: `${hub.glowColor.replace("0.22", "0.15")}`,
+                  border: `1px solid ${hub.borderColor}`,
+                  boxShadow: `0 0 16px ${hub.glowColor}`,
+                }}>{ hub.icon}</div>
+
+                {/* Category tag */}
+                <div style={{
+                  fontSize: "9px",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: hub.color,
+                  marginBottom: "6px",
+                  opacity: 0.8,
+                }}>{ hub.category}</div>
+
+                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "1rem", fontWeight: 700, color: "white", marginBottom: "8px", letterSpacing: "-0.01em" }}>{hub.title}</h3>
+                <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: "18px" }}>{hub.desc}</p>
+
+                {/* Launch button row */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}>
+                  <div
+                    className="hub-launch"
+                    style={{
+                      fontSize: "10px",
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: hub.color,
+                      opacity: 0.6,
+                      transition: "opacity 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    {hub.btnLabel}
+                    <span
+                      className="hub-arrow"
+                      style={{
+                        display: "inline-block",
+                        transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+                      }}
+                    >→</span>
+                  </div>
+
+                  {/* Mini LED indicator */}
+                  <div style={{
+                    width: "7px", height: "7px", borderRadius: "50%",
+                    background: hub.color,
+                    boxShadow: `0 0 8px ${hub.color}, 0 0 16px ${hub.glowColor}`,
+                    animation: "pulse-ring 2.5s infinite",
+                  }} />
                 </div>
               </a>
             ))}
@@ -703,25 +907,45 @@ function HTMLOverlay() {
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", lineHeight: 1.75, marginBottom: "40px", fontWeight: 300 }}>
             Experience the future of stadium operations at FIFA World Cup 2026. Six AI hubs. One unified command.
           </p>
+
+          {/* Premium CTA buttons */}
           <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", pointerEvents: "auto" }}>
-            {[
-              { href: "/fan",       label: "Fan Experience", primary: true  },
-              { href: "/organizer", label: "Command Center", primary: false },
-              { href: "/security",  label: "Security Ops",   primary: false },
-            ].map(({ href, label, primary }) => (
-              <Link key={href} href={href} style={{
-                display: "inline-flex", alignItems: "center",
-                padding: "13px 24px", borderRadius: "100px",
-                background: primary ? "linear-gradient(135deg, #d4a017, hsl(38,95%,42%))" : "rgba(255,255,255,0.06)",
-                border: primary ? "none" : "1px solid rgba(255,255,255,0.12)",
-                color: primary ? "#000" : "white",
-                fontFamily: "'Space Grotesk', sans-serif", fontWeight: primary ? 700 : 600,
-                fontSize: "0.875rem", textDecoration: "none",
-                boxShadow: primary ? "0 4px 28px rgba(212,160,23,0.42)" : "none",
-              }}>
-                {label}
-              </Link>
-            ))}
+            <Link
+              href="/fan"
+              id="footer-cta-fan"
+              className="btn btn-fan btn-lg"
+              style={{ textDecoration: "none" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(3px) translateY(-4px)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ""; }}
+              onMouseDown={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(-2px) translateY(2px) scale(0.975)"; }}
+              onMouseUp={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(3px) translateY(-4px)"; }}
+            >
+              ⚡ Fan Experience
+            </Link>
+
+            <Link
+              href="/organizer"
+              id="footer-cta-command"
+              className="btn btn-ghost btn-lg"
+              style={{ textDecoration: "none" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(1px) translateY(-2px)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ""; }}
+            >
+              Command Center
+            </Link>
+
+            <Link
+              href="/security"
+              id="footer-cta-security"
+              className="btn btn-security btn-lg"
+              style={{ textDecoration: "none" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(2px) translateY(-3px)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ""; }}
+              onMouseDown={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(-2px) translateY(2px) scale(0.975)"; }}
+              onMouseUp={(e) => { (e.currentTarget as HTMLElement).style.transform = "perspective(600px) translateZ(2px) translateY(-3px)"; }}
+            >
+              🛡️ Security Ops
+            </Link>
           </div>
 
           {/* Footer */}
