@@ -1,436 +1,401 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Users, Zap, ShieldAlert, Activity, Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import Modal from "@/components/Modal";
+import React, { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Shield, HeartPulse, Users, Bus, Accessibility, UserCheck,
+  X, Activity, Brain, Expand, Shrink, ExternalLink,
+} from "lucide-react";
+import Link from "next/link";
 import { ToastContainer, ToastMessage } from "@/components/Toast";
-import NavHeader from "@/components/NavHeader";
+import { ScenarioProvider, useScenario } from "@/components/midnight/ScenarioEngine";
+import StadiumPulseHeader from "@/components/midnight/StadiumPulseHeader";
+import TacticalStream from "@/components/midnight/TacticalStream";
+import CommandDock from "@/components/midnight/CommandDock";
+import HealthScore from "@/components/midnight/HealthScore";
 
-// ─── Holographic Stat Card ──────────────────────────────────────────────────
-interface StatCardProps {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  accent: string;
-  accentBg: string;
-  accentBorder: string;
-  trend?: "up" | "down" | "flat";
-  trendLabel?: string;
-  highlight?: boolean;
-  onClick?: () => void;
-}
-
-function StatCard({ title, value, icon, accent, accentBg, accentBorder, trend, trendLabel, highlight, onClick }: StatCardProps) {
-  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-  const trendColor = trend === "up" ? "var(--nexus-green)" : trend === "down" ? "var(--nexus-red)" : "var(--text-tertiary)";
-
-  return (
-    <div
-      onClick={onClick}
-      className={`relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${onClick ? "cursor-pointer" : ""}`}
-      style={{
-        background: accentBg,
-        border: `1px solid ${accentBorder}`,
-        boxShadow: highlight ? `0 0 30px ${accent}22` : "0 4px 20px rgba(0,0,0,0.3)",
-      }}
-      onMouseEnter={(e) => onClick && ((e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 1px ${accentBorder}, 0 8px 30px rgba(0,0,0,0.5), 0 0 40px ${accent}18`)}
-      onMouseLeave={(e) => onClick && ((e.currentTarget as HTMLElement).style.boxShadow = highlight ? `0 0 30px ${accent}22` : "0 4px 20px rgba(0,0,0,0.3)")}
-    >
-      {/* Animated top glow bar */}
-      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
-
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <p className="text-label text-[9px] mb-1" style={{ color: "var(--text-tertiary)" }}>{title}</p>
-          <p
-            className="text-data text-3xl font-bold tabular-nums"
-            style={{ color: highlight ? accent : "white", letterSpacing: "-0.02em", textShadow: highlight ? `0 0 20px ${accent}55` : "none" }}
-          >
-            {value}
-          </p>
-        </div>
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}
-        >
-          {icon}
-        </div>
+// Lazy-load the heavy 3D scene
+const DigitalTwinScene = dynamic(
+  () => import("@/components/midnight/DigitalTwinScene"),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{
+        width: "100%", height: "100%",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        gap: 16, background: "rgba(4,4,8,0.6)",
+      }}>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.06)", borderTop: "2px solid #22d3ee", animation: "spin 1s linear infinite" }} />
+        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em" }}>
+          INITIALIZING DIGITAL TWIN...
+        </p>
       </div>
+    ),
+  }
+);
 
-      {trend && trendLabel && (
-        <div className="flex items-center gap-1.5">
-          <TrendIcon className="w-3 h-3" style={{ color: trendColor }} />
-          <span className="text-[11px] font-medium" style={{ color: trendColor }}>{trendLabel}</span>
-        </div>
-      )}
-    </div>
-  );
-}
+// ── Hub navigation links ──────────────────────────────────────────────────────
+const HUBS = [
+  { label: "Security",      href: "/security",      icon: <Shield className="w-4 h-4" />,         color: "#818cf8", glow: "rgba(129,140,248,0.3)" },
+  { label: "Medical",       href: "/medical",        icon: <HeartPulse className="w-4 h-4" />,      color: "#ef4444", glow: "rgba(239,68,68,0.3)" },
+  { label: "Volunteer",     href: "/volunteer",      icon: <Users className="w-4 h-4" />,           color: "#4ade80", glow: "rgba(74,222,128,0.3)" },
+  { label: "Transport",     href: "/transportation", icon: <Bus className="w-4 h-4" />,             color: "#22d3ee", glow: "rgba(34,211,238,0.3)" },
+  { label: "Accessibility", href: "/accessibility",  icon: <Accessibility className="w-4 h-4" />,   color: "#fbbf24", glow: "rgba(251,191,36,0.3)" },
+  { label: "Fan Hub",       href: "/fan",            icon: <UserCheck className="w-4 h-4" />,       color: "#d4a017", glow: "rgba(212,160,23,0.3)" },
+];
 
-// ─── Directive Card ─────────────────────────────────────────────────────────
-interface DirectiveCardProps {
-  type: "warn" | "ok" | "info";
-  title: string;
-  body: string;
-  cta?: string;
-  ctaLoading?: boolean;
-  ctaDisabled?: boolean;
-  onCta?: () => void;
-  resolved?: boolean;
-}
+// ── Health Score Explanation Modal ────────────────────────────────────────────
+function HealthExplainModal({
+  score,
+  onClose,
+}: {
+  score: number;
+  onClose: () => void;
+}) {
+  const { config } = useScenario();
 
-function DirectiveCard({ type, title, body, cta, ctaLoading, ctaDisabled, onCta, resolved }: DirectiveCardProps) {
-  const config = {
-    warn:  { accent: "var(--nexus-gold)",  bg: "hsla(43,90%,48%,0.07)",  border: "rgba(212,160,23,0.25)", dot: "var(--nexus-gold)",  label: "ACTION REQUIRED" },
-    ok:    { accent: "var(--nexus-green)", bg: "hsla(145,65%,42%,0.07)", border: "rgba(74,222,128,0.25)", dot: "var(--nexus-green)", label: "RESOLVED"         },
-    info:  { accent: "var(--nexus-cyan)",  bg: "hsla(195,100%,50%,0.06)",border: "rgba(0,200,255,0.2)",   dot: "var(--nexus-cyan)",  label: "INFO"             },
-  }[type];
-
-  return (
-    <div
-      className="rounded-xl p-4 relative overflow-hidden"
-      style={{ background: config.bg, border: `1px solid ${config.border}` }}
-    >
-      <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ background: config.accent }} />
-      <div className="ml-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: config.dot }} />
-            <span className="text-label text-[9px]" style={{ color: config.accent }}>{config.label}</span>
-          </div>
-        </div>
-        <p className="text-sm font-semibold text-white mb-1">{title}</p>
-        <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--text-secondary)" }}>{body}</p>
-        {cta && !ctaDisabled && (
-          <button
-            onClick={onCta}
-            disabled={ctaLoading}
-            id={`directive-cta-${title.replace(/\s+/g, "-").toLowerCase()}`}
-            className={`btn w-full ${
-              type === "warn" ? "btn-primary btn-sm" :
-              type === "ok"  ? "btn-success btn-sm" :
-              "btn-ai btn-sm"
-            } ${ctaLoading ? "btn-loading" : ""}`}
-            style={{ justifyContent: "center" }}
-          >
-            {ctaLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            {!ctaLoading && type === "warn"  && <span style={{ fontSize: "0.9em" }}>⚡</span>}
-            {!ctaLoading && type === "ok"   && <span style={{ fontSize: "0.9em" }}>✓</span>}
-            {!ctaLoading && type === "info" && <span style={{ fontSize: "0.9em" }}>🧠</span>}
-            {cta}
-          </button>
-        )}
-        {ctaDisabled && resolved && (
-          <div className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--nexus-green)" }}>
-            ✓ Action completed
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Main ───────────────────────────────────────────────────────────────────
-export default function OrganizerDashboard() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-  const [metrics, setMetrics] = useState({ crowd: 45200, energy: "1.2 MW", incidents: 2, volunteers: 450 });
-  const [liveData, setLiveData] = useState({ gate_6: "Normal", gate_2: "Normal" });
-  const [incidentsList, setIncidentsList] = useState<any[]>([]);
-  const [tasksList, setTasksList] = useState<any[]>([]);
-  const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [actionExecuted, setActionExecuted] = useState(false);
-  const [maintenanceDispatched, setMaintenanceDispatched] = useState(false);
-  const [loading, setLoading] = useState<string | null>(null);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [chartAnimated, setChartAnimated] = useState(false);
-
-  const addToast = (type: "success" | "error" | "info", text: string) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, text }]);
+  const getColor = (s: number) => {
+    if (s >= 95) return "#4ade80";
+    if (s >= 85) return "#22d3ee";
+    if (s >= 70) return "#fbbf24";
+    return "#ef4444";
   };
+  const color = getColor(score);
 
-  const chartData = [
-    { name: "Gate 1", crowd: 4000 },
-    { name: "Gate 2", crowd: liveData.gate_2 === "High Density" ? 6200 : 3000 },
-    { name: "Gate 3", crowd: 2000 },
-    { name: "Gate 4", crowd: 2780 },
-    { name: "Gate 5", crowd: 1890 },
-    { name: "Gate 6", crowd: liveData.gate_6 === "High Density" ? 9000 : 2390 },
+  const factors = [
+    { label: "Crowd Flow Efficiency", value: score >= 85 ? 92 : 61, status: score >= 85 ? "GOOD" : "WARN" },
+    { label: "Medical Response Time", value: 95, status: "GOOD" },
+    { label: "Transport Load",        value: score >= 80 ? 80 : 45, status: score >= 80 ? "GOOD" : "CRITICAL" },
+    { label: "Security Coverage",     value: 88, status: "GOOD" },
+    { label: "Volunteer Deployment",  value: 96, status: "GOOD" },
+    { label: "Concession Wait Time",  value: score >= 85 ? 74 : 42, status: score >= 85 ? "FAIR" : "WARN" },
   ];
 
-  const maxCrowd = Math.max(...chartData.map((d) => d.crowd));
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 60,
+        background: "rgba(0,0,0,0.7)",
+        backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "rgba(6,6,12,0.98)",
+          border: `1px solid ${color}30`,
+          borderRadius: 20,
+          padding: 28,
+          width: "100%",
+          maxWidth: 480,
+          boxShadow: `0 40px 80px rgba(0,0,0,0.8), 0 0 40px ${color}18`,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 800, color: "white", marginBottom: 4 }}>Stadium Health Score</h2>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>AI COMPUTED • UPDATED EVERY 30s</p>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)" }} aria-label="Close modal">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
+        {/* Big score */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+          <HealthScore score={score} size={120} />
+        </div>
+
+        {/* Factor breakdown */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+          {factors.map((f) => (
+            <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>{f.label}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: f.status === "GOOD" ? "#4ade80" : f.status === "FAIR" || f.status === "WARN" ? "#fbbf24" : "#ef4444" }}>{f.status}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{f.value}%</span>
+                  </div>
+                </div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                  <div style={{ height: "100%", width: `${f.value}%`, borderRadius: 2, background: f.status === "GOOD" ? "#4ade80" : f.status === "FAIR" || f.status === "WARN" ? "#fbbf24" : "#ef4444", transition: "width 0.8s ease" }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* AI prediction */}
+        <div style={{ padding: "12px 14px", background: `${color}0a`, border: `1px solid ${color}20`, borderRadius: 10 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: color, marginBottom: 6, textTransform: "uppercase" }}>🧠 AI Prediction</div>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+            {score >= 85
+              ? `Stadium operating optimally. Score likely to improve to ${Math.min(score + 5, 99)} within 12 minutes as crowd settles into seating.`
+              : score >= 70
+              ? `Moderate issues detected. Score recovery estimated in ${config.id !== "normal" ? "45" : "18"} minutes following ${config.label} resolution.`
+              : `Critical conditions detected. Immediate action required. Score may drop further without intervention.`
+            }
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── Inner App (has access to ScenarioContext) ──────────────────────────────────
+function MidnightPitchInner() {
+  const { healthScore, config, scenario } = useScenario();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+  const wsRef = useRef<WebSocket | null>(null);
+
+  const [metrics, setMetrics] = useState({ crowd: 45200, incidents: 2, volunteers: 450 });
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [showHealthModal, setShowHealthModal] = useState(false);
+  const [streamExpanded, setStreamExpanded] = useState(true);
+  const [twinExpanded, setTwinExpanded] = useState(false);
+
+  const addToast = useCallback((type: "success" | "error" | "info", text: string) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, type, text }]);
+  }, []);
+
+  // WebSocket connection
   useEffect(() => {
-    setTimeout(() => setChartAnimated(true), 500);
+    const ws = new WebSocket(`${wsUrl}/ws`);
+    wsRef.current = ws;
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws";
-    const ws = new WebSocket(wsUrl);
+    ws.onopen = () => console.log("Midnight Pitch: WebSocket connected");
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "event" && data.event_type === "CROWD_UPDATE") setLiveData(data.data);
         if (data.type === "state_update") {
-          const state = data.state;
+          const s = data.state;
           setMetrics({
-            crowd: state.attendance,
-            energy: `${state.energy} MW`,
-            incidents: state.incidents.filter((i: any) => i.status !== "RESOLVED").length,
-            volunteers: state.volunteers,
+            crowd: s.attendance,
+            incidents: s.incidents?.filter((i: any) => i.status !== "RESOLVED").length ?? 0,
+            volunteers: s.volunteers,
           });
-          setIncidentsList(state.incidents);
-          setTasksList(state.tasks);
         }
-      } catch (e) { console.error(e); }
+      } catch (_) {}
     };
-    return () => ws.close();
-  }, []);
+    ws.onerror = () => console.warn("Midnight Pitch: WebSocket error — operating in simulation mode");
 
-  const handleExecuteRedirection = async () => {
-    setLoading("redirect");
-    try {
-      const res = await fetch(`${API_URL}/api/logistics/reroute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ corridor: "Corridor C", action: "divert" }),
-      });
-      if (res.ok) { setActionExecuted(true); addToast("success", "Dynamic signage updated. Crowd diverted via Corridor C."); setActiveModal("execute"); }
-      else { addToast("error", "Failed to update dynamic signs API."); }
-    } catch {
-      addToast("info", "Fallback mode: Redirecting signage locally.");
-      setActionExecuted(true); setActiveModal("execute");
-    } finally { setLoading(null); }
-  };
-
-  const handleDispatchMaintenance = async () => {
-    setLoading("maintenance");
-    try {
-      const res = await fetch(`${API_URL}/api/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "HVAC Zone 4 Power Draw Audit", location: "HVAC Zone 4 (Concourse D)", priority: "MEDIUM", category: "VOLUNTEER" }),
-      });
-      if (res.ok) { setMaintenanceDispatched(true); addToast("success", "Workorder generated! HVAC Technician dispatched."); }
-      else { addToast("error", "Failed to schedule volunteer task."); }
-    } catch { setMaintenanceDispatched(true); addToast("success", "Local dispatch simulated for HVAC Zone 4."); }
-    finally { setLoading(null); }
-  };
+    return () => { ws.close(); wsRef.current = null; };
+  }, [wsUrl]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--surface-0)" }}>
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "radial-gradient(ellipse at 50% 0%, rgba(10,15,35,1) 0%, rgba(4,4,8,1) 60%)",
+        transition: "background 0.8s ease",
+      }}
+      data-scenario={scenario}
+    >
+      {/* Ambient scenario glow overlay */}
+      {scenario !== "normal" && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            background: `radial-gradient(ellipse at 50% 0%, ${config.glowColor} 0%, transparent 60%)`,
+            zIndex: 0,
+            transition: "background 0.6s ease",
+          }}
+        />
+      )}
+
       <ToastContainer toasts={toasts} setToasts={setToasts} />
 
-      <NavHeader
-        title="Command Center"
-        subtitle="Executive Hub"
-        accentColor="gold"
-        statusLabel="DIGITAL TWIN ACTIVE"
-        statusVariant="live"
+      {/* ── Stadium Pulse Header ── */}
+      <StadiumPulseHeader
+        healthScore={healthScore}
+        liveMetrics={metrics}
+        onHealthScoreClick={() => setShowHealthModal(true)}
       />
 
-      <div className="flex-1 px-6 py-8 max-w-[1440px] mx-auto w-full space-y-8">
-
-        {/* ── Stat Cards ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-        >
-          <StatCard
-            title="Total Attendance"
-            value={metrics.crowd.toLocaleString()}
-            icon={<Users className="w-4 h-4" style={{ color: "var(--nexus-cyan)" }} />}
-            accent="var(--nexus-cyan)" accentBg="hsla(195,100%,50%,0.06)" accentBorder="rgba(0,200,255,0.2)"
-            trend="up" trendLabel="+2.4% vs. last hour"
-          />
-          <StatCard
-            title="Energy Usage"
-            value={metrics.energy}
-            icon={<Zap className="w-4 h-4" style={{ color: "var(--nexus-gold-bright)" }} />}
-            accent="var(--nexus-gold-bright)" accentBg="hsla(43,90%,48%,0.06)" accentBorder="rgba(212,160,23,0.22)"
-            trend="down" trendLabel="12% below baseline"
-          />
-          <StatCard
-            title="Active Incidents"
-            value={metrics.incidents.toString()}
-            icon={<ShieldAlert className="w-4 h-4" style={{ color: "var(--nexus-red)" }} />}
-            accent="var(--nexus-red)" accentBg="hsla(0,85%,55%,0.08)" accentBorder="rgba(239,68,68,0.3)"
-            trend={metrics.incidents > 0 ? "up" : "flat"} trendLabel={metrics.incidents > 0 ? "Requires attention" : "All clear"}
-            highlight={metrics.incidents > 0}
-          />
-          <StatCard
-            title="On-Shift Volunteers"
-            value={metrics.volunteers.toString()}
-            icon={<Activity className="w-4 h-4" style={{ color: "var(--nexus-green)" }} />}
-            accent="var(--nexus-green)" accentBg="hsla(145,65%,42%,0.06)" accentBorder="rgba(74,222,128,0.2)"
-            trend="flat" trendLabel="Fully staffed"
-          />
-        </motion.div>
-
-        {/* ── Chart + Directives ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Crowd Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-2 glass-panel p-6 rounded-2xl"
-            style={{ minHeight: "360px" }}
+      {/* ── Main body ── */}
+      <div
+        style={{
+          flex: 1,
+          display: "grid",
+          gridTemplateColumns: twinExpanded ? "1fr 0" : streamExpanded ? "1fr 380px" : "1fr 52px",
+          transition: "grid-template-columns 0.4s cubic-bezier(0.25,0.46,0.45,0.94)",
+          overflow: "hidden",
+          position: "relative",
+          zIndex: 1,
+          paddingBottom: 120, // Command dock height
+        }}
+      >
+        {/* ── Left: Digital Twin ── */}
+        <div style={{ position: "relative", overflow: "hidden", background: "rgba(4,4,8,0.4)" }}>
+          {/* Expand/Collapse button */}
+          <button
+            onClick={() => { setTwinExpanded((p) => !p); if (twinExpanded) setStreamExpanded(true); }}
+            aria-label={twinExpanded ? "Show tactical stream" : "Expand digital twin"}
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 10,
+              padding: "6px 10px",
+              borderRadius: 8,
+              background: "rgba(6,6,12,0.8)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.4)",
+              backdropFilter: "blur(8px)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 9,
+              letterSpacing: "0.08em",
+            }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3
-                  className="text-base font-semibold text-white"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  Live Crowd Distribution
-                </h3>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>Real-time gate inflow analysis</p>
-              </div>
-              <div className="data-pill data-pill-gold">
-                <span className="status-dot status-dot-live" />
-                LIVE
-              </div>
-            </div>
+            {twinExpanded ? <Shrink className="w-3 h-3" /> : <Expand className="w-3 h-3" />}
+            {twinExpanded ? "RESTORE" : "EXPAND"}
+          </button>
 
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={chartData} barCategoryGap="35%">
-                <XAxis
-                  dataKey="name"
-                  stroke="rgba(255,255,255,0.12)"
-                  tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "JetBrains Mono" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="rgba(255,255,255,0.12)"
-                  tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "JetBrains Mono" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                  contentStyle={{
-                    background: "rgba(8,8,10,0.95)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontFamily: "JetBrains Mono",
-                    fontSize: "12px",
-                  }}
-                />
-                <Bar dataKey="crowd" radius={[5, 5, 0, 0]} isAnimationActive={chartAnimated}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        entry.crowd === maxCrowd
-                          ? "var(--nexus-red)"
-                          : entry.crowd > 3000
-                          ? "var(--nexus-gold)"
-                          : "rgba(255,255,255,0.2)"
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
+          <DigitalTwinScene />
 
-          {/* AI Directives */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="glass-panel p-6 rounded-2xl flex flex-col gap-4 overflow-y-auto"
-            style={{ maxHeight: "400px" }}
+          {/* Quick hub navigation (bottom of twin viewport) */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 16,
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: 8,
+              zIndex: 10,
+            }}
           >
-            <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-              <Activity className="w-4 h-4" style={{ color: "var(--nexus-gold-bright)" }} />
-              <h3
-                className="text-base font-semibold text-white"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            {HUBS.map((hub) => (
+              <Link
+                key={hub.href}
+                href={hub.href}
+                aria-label={`Open ${hub.label} dashboard`}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  background: "rgba(6,6,12,0.85)",
+                  border: `1px solid ${hub.color}25`,
+                  textDecoration: "none",
+                  color: hub.color,
+                  boxShadow: `0 0 16px ${hub.glow}`,
+                  backdropFilter: "blur(10px)",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = `${hub.color}18`;
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px ${hub.glow}`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(6,6,12,0.85)";
+                  (e.currentTarget as HTMLElement).style.transform = "none";
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 16px ${hub.glow}`;
+                }}
               >
-                AI Directives
-              </h3>
-            </div>
+                {hub.icon}
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  {hub.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
 
-            <AnimatePresence>
-              {liveData.gate_6 === "High Density" && !actionExecuted && (
-                <motion.div key="redirect" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  <DirectiveCard
-                    type="warn"
-                    title="High Density Alert — Gate 6"
-                    body="AI predictor recommends redirecting incoming spectators via Corridor C immediately."
-                    cta="Execute Redirection"
-                    ctaLoading={loading === "redirect"}
-                    onCta={handleExecuteRedirection}
-                  />
-                </motion.div>
-              )}
+        {/* ── Right: Tactical Stream ── */}
+        <div style={{ overflow: "hidden", position: "relative" }}>
+          {/* Collapse toggle */}
+          {!twinExpanded && (
+            <button
+              onClick={() => setStreamExpanded((p) => !p)}
+              aria-label={streamExpanded ? "Collapse tactical stream" : "Expand tactical stream"}
+              style={{
+                position: "absolute",
+                top: 12,
+                left: streamExpanded ? 8 : "50%",
+                transform: streamExpanded ? "none" : "translateX(-50%)",
+                zIndex: 10,
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                background: "rgba(6,6,12,0.9)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                cursor: "pointer",
+                color: "rgba(255,255,255,0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.3s",
+              }}
+            >
+              <Brain className="w-3 h-3" style={{ color: "var(--nexus-cyan)" }} />
+            </button>
+          )}
 
-              {actionExecuted && (
-                <motion.div key="redirected" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-                  <DirectiveCard
-                    type="ok"
-                    title="Redirection Route Active"
-                    body="Gates and concourse signage updated. Crowd diverted via Corridor C."
-                    ctaDisabled resolved
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <DirectiveCard
-              type="info"
-              title="Predictive Maintenance"
-              body="HVAC Zone 4 showing 15% irregular power draw. Schedule technician before temperature fluctuations occur."
-              cta={maintenanceDispatched ? undefined : "Dispatch Inspector"}
-              ctaLoading={loading === "maintenance"}
-              ctaDisabled={maintenanceDispatched}
-              onCta={handleDispatchMaintenance}
-              resolved={maintenanceDispatched}
-            />
-
-            <DirectiveCard
-              type="info"
-              title="Schedule Sync"
-              body="Transit sync active. Main trains scheduled at 5-min intervals starting post-match at 22:00."
-            />
-          </motion.div>
+          {streamExpanded && !twinExpanded && (
+            <TacticalStream apiUrl={API_URL} addToast={addToast} />
+          )}
         </div>
       </div>
 
-      {/* Redirect confirmation modal */}
-      <Modal isOpen={activeModal === "execute"} onClose={() => setActiveModal(null)} title="Action Status: Redirection Triggered">
-        <div className="text-center space-y-4">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
-            style={{ background: "hsla(145,65%,42%,0.15)", border: "1px solid rgba(74,222,128,0.3)" }}
-          >
-            <Activity className="w-7 h-7" style={{ color: "var(--nexus-green)" }} />
-          </div>
-          <h3 className="text-lg font-semibold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Digital Signage Overridden
-          </h3>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            LED displays outside the stadium and concourse screens have been updated.
-            Flow rate in Zone 6 is diminishing.
-          </p>
-          <button
-            id="modal-acknowledge-btn"
-            onClick={() => setActiveModal(null)}
-            className="btn btn-success w-full"
-            style={{ justifyContent: "center" }}
-          >
-            <span style={{ fontSize: "1em" }}>✓</span>
-            Acknowledge
-          </button>
-        </div>
-      </Modal>
+      {/* ── Command Dock ── */}
+      <CommandDock wsRef={wsRef} role="Organizer" />
+
+      {/* ── Health Score Modal ── */}
+      <AnimatePresence>
+        {showHealthModal && (
+          <HealthExplainModal score={healthScore} onClose={() => setShowHealthModal(false)} />
+        )}
+      </AnimatePresence>
+
+      <style jsx global>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes scan-horizontal {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
+      `}</style>
     </div>
+  );
+}
+
+// ── Page Export (wraps in ScenarioProvider) ───────────────────────────────────
+export default function MidnightPitchPage() {
+  return (
+    <ScenarioProvider>
+      <MidnightPitchInner />
+    </ScenarioProvider>
   );
 }
