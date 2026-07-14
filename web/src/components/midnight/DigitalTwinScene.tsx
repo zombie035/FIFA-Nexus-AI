@@ -115,18 +115,24 @@ function StadiumStands({ primaryColor }: { primaryColor: string }) {
       <mesh position={[0, 1.5, 0]}>
         <torusGeometry args={[8, 3.5, 8, 64]} />
         <meshStandardMaterial
-          color="#64748b"
-          roughness={0.6}
-          metalness={0.4}
-          emissive="#1e293b"
-          emissiveIntensity={0.4}
+          color="#ffffff"
+          roughness={0.2}
+          metalness={0.5}
+          emissive="#64748b"
+          emissiveIntensity={0.8}
         />
       </mesh>
 
       {/* Seating tiers — inner */}
       <mesh position={[0, 0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[5.5, 9, 64]} />
-        <meshStandardMaterial color="#334155" roughness={0.9} metalness={0.1} />
+        <meshStandardMaterial 
+          color="#f8fafc" 
+          roughness={0.4} 
+          metalness={0.2} 
+          emissive="#475569" 
+          emissiveIntensity={0.6} 
+        />
       </mesh>
 
       {/* Roof ring segments */}
@@ -136,12 +142,12 @@ function StadiumStands({ primaryColor }: { primaryColor: string }) {
           <group key={i} rotation={[0, angle, 0]}>
             <mesh position={[8.5, 4.5, 0]}>
               <boxGeometry args={[1.5, 0.15, 0.8]} />
-              <meshStandardMaterial color="#e2e8f0" roughness={0.4} metalness={0.6} />
+              <meshStandardMaterial color="#ffffff" roughness={0.3} metalness={0.6} emissive="#94a3b8" emissiveIntensity={0.8} />
             </mesh>
             {/* Roof support pillar */}
             <mesh position={[8.5, 2, 0]}>
               <cylinderGeometry args={[0.08, 0.12, 4.5, 6]} />
-              <meshStandardMaterial color="#94a3b8" roughness={0.5} metalness={0.6} />
+              <meshStandardMaterial color="#ffffff" roughness={0.5} metalness={0.6} emissive="#64748b" emissiveIntensity={0.6} />
             </mesh>
           </group>
         );
@@ -206,12 +212,12 @@ function FloodlightTowers() {
         <group key={i} position={[x, y, z]}>
           <mesh position={[0, 3.5, 0]}>
             <cylinderGeometry args={[0.08, 0.15, 7, 6]} />
-            <meshStandardMaterial color="#2a2a3a" metalness={0.8} roughness={0.3} />
+            <meshStandardMaterial color="#cbd5e1" metalness={0.6} roughness={0.4} emissive="#475569" emissiveIntensity={0.5} />
           </mesh>
           {/* Light head */}
           <mesh position={[0, 7.2, 0]}>
             <boxGeometry args={[1.2, 0.3, 0.5]} />
-            <meshStandardMaterial color="#fffaee" emissive="#fffaee" emissiveIntensity={2.5} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3} />
           </mesh>
         </group>
       ))}
