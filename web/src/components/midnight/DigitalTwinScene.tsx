@@ -115,18 +115,18 @@ function StadiumStands({ primaryColor }: { primaryColor: string }) {
       <mesh position={[0, 1.5, 0]}>
         <torusGeometry args={[8, 3.5, 8, 64]} />
         <meshStandardMaterial
-          color="#1a1a2e"
-          roughness={0.85}
-          metalness={0.1}
-          emissive="#0a0a18"
-          emissiveIntensity={0.3}
+          color="#64748b"
+          roughness={0.6}
+          metalness={0.4}
+          emissive="#1e293b"
+          emissiveIntensity={0.4}
         />
       </mesh>
 
       {/* Seating tiers — inner */}
       <mesh position={[0, 0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[5.5, 9, 64]} />
-        <meshStandardMaterial color="#0d1117" roughness={0.9} metalness={0.05} />
+        <meshStandardMaterial color="#334155" roughness={0.9} metalness={0.1} />
       </mesh>
 
       {/* Roof ring segments */}
@@ -136,12 +136,12 @@ function StadiumStands({ primaryColor }: { primaryColor: string }) {
           <group key={i} rotation={[0, angle, 0]}>
             <mesh position={[8.5, 4.5, 0]}>
               <boxGeometry args={[1.5, 0.15, 0.8]} />
-              <meshStandardMaterial color="#252535" roughness={0.6} metalness={0.4} />
+              <meshStandardMaterial color="#e2e8f0" roughness={0.4} metalness={0.6} />
             </mesh>
             {/* Roof support pillar */}
             <mesh position={[8.5, 2, 0]}>
               <cylinderGeometry args={[0.08, 0.12, 4.5, 6]} />
-              <meshStandardMaterial color="#1e1e2e" roughness={0.5} metalness={0.6} />
+              <meshStandardMaterial color="#94a3b8" roughness={0.5} metalness={0.6} />
             </mesh>
           </group>
         );
