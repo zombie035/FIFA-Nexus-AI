@@ -16,6 +16,14 @@
 
 </div>
 
+## 📸 Screenshots
+
+| Landing Page | Command Center (Organizer) |
+|:---:|:---:|
+| ![Landing Page](assets/screenshot_home.png) | ![Command Center](assets/screenshot_organizer.png) |
+| **Volunteer Dashboard** | |
+| ![Volunteer Dashboard](assets/screenshot_volunteer.png) | |
+
 ---
 
 ## 🌟 Problem Statement
